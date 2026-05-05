@@ -1,0 +1,17 @@
+{
+  "name": "taskflow-pro",
+  "version": "1.0.0",
+  "description": "A full-stack role-based task management application",
+  "scripts": {
+    "install:server": "cd server && npm install",
+    "install:client": "cd client && npm install",
+    "install": "npm run install:server && npm run install:client",
+    "build": "cd client && npm run build",
+    "start": "cd server && node index.js",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "seed": "cd server && node seed.js"
+  },
+  "keywords": ["task-management", "fullstack", "mern"],
+  "license": "MIT"
+}
