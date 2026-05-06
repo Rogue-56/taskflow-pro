@@ -12,6 +12,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const projectRoutes = require('./routes/projects');
 const taskRoutes = require('./routes/tasks');
+const teamRoutes = require('./routes/teams');
 
 const app = express();
 
@@ -32,10 +33,31 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/teams', teamRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Updates indicator — counts items created/updated in last 24h
+const { protect } = require('./middleware/auth');
+const Task = require('./models/Task');
+const Project = require('./models/Project');
+const Team = require('./models/Team');
+
+app.get('/api/updates', protect, async (req, res) => {
+  try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [tasks, projects, teams] = await Promise.all([
+      Task.countDocuments({ updatedAt: { $gte: since } }),
+      Project.countDocuments({ updatedAt: { $gte: since } }),
+      Team.countDocuments({ updatedAt: { $gte: since } }),
+    ]);
+    res.json({ tasks, projects, teams });
+  } catch {
+    res.json({ tasks: 0, projects: 0, teams: 0 });
+  }
 });
 
 // Serve frontend in production

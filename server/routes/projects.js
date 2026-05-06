@@ -17,6 +17,11 @@ router.get('/', protect, async (req, res, next) => {
         .populate('members', 'name email avatar role')
         .populate('createdBy', 'name email')
         .sort({ createdAt: -1 });
+    } else if (req.user.role === 'manager') {
+      projects = await Project.find({ $or: [{ createdBy: req.user._id }, { members: req.user._id }] })
+        .populate('members', 'name email avatar role')
+        .populate('createdBy', 'name email')
+        .sort({ createdAt: -1 });
     } else {
       projects = await Project.find({ members: req.user._id })
         .populate('members', 'name email avatar role')
@@ -56,7 +61,7 @@ router.get('/', protect, async (req, res, next) => {
 // @route   POST /api/projects
 // @desc    Create a new project
 // @access  Private/Admin
-router.post('/', protect, authorize('admin'), async (req, res, next) => {
+router.post('/', protect, authorize('admin', 'manager'), async (req, res, next) => {
   try {
     const { name, description, members } = req.body;
 
@@ -95,7 +100,7 @@ router.get('/:id', protect, async (req, res, next) => {
     }
 
     // Members can only view their own projects
-    if (req.user.role !== 'admin' && !project.members.some((m) => m._id.toString() === req.user._id.toString())) {
+    if (req.user.role === 'member' && !project.members.some((m) => m._id.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: 'Not authorized to view this project' });
     }
 
@@ -113,7 +118,7 @@ router.get('/:id', protect, async (req, res, next) => {
 // @route   PUT /api/projects/:id
 // @desc    Update project
 // @access  Private/Admin
-router.put('/:id', protect, authorize('admin'), async (req, res, next) => {
+router.put('/:id', protect, authorize('admin', 'manager'), async (req, res, next) => {
   try {
     const { name, description, status, members } = req.body;
 
@@ -142,7 +147,7 @@ router.put('/:id', protect, authorize('admin'), async (req, res, next) => {
 // @route   DELETE /api/projects/:id
 // @desc    Delete project and all its tasks
 // @access  Private/Admin
-router.delete('/:id', protect, authorize('admin'), async (req, res, next) => {
+router.delete('/:id', protect, authorize('admin', 'manager'), async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) {

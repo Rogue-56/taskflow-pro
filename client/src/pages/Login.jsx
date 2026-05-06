@@ -20,7 +20,7 @@ const Login = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">⚡ TaskFlow Pro</h1>
+        <h1 className="auth-title">TaskFlow Pro</h1>
         <p className="auth-subtitle">Sign in to your account</p>
 
         <form onSubmit={handleSubmit}>

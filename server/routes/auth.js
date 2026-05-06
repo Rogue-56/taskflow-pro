@@ -15,7 +15,7 @@ const generateToken = (id) => {
 // @access  Public
 router.post('/register', async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please provide name, email, and password' });
@@ -26,7 +26,10 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ message: 'A user with that email already exists' });
     }
 
-    const user = await User.create({ name, email, password });
+    const validRoles = ['admin', 'manager', 'member'];
+    const userRole = validRoles.includes(role) ? role : 'member';
+
+    const user = await User.create({ name, email, password, role: userRole });
 
     const token = generateToken(user._id);
 

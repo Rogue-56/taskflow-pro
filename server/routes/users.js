@@ -1,16 +1,50 @@
 const express = require('express');
 const User = require('../models/User');
+const Team = require('../models/Team');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
 // @route   GET /api/users
-// @desc    Get all users
-// @access  Private/Admin
-router.get('/', protect, authorize('admin'), async (req, res, next) => {
+// @desc    Get users based on role
+//          Admin: all users
+//          Manager: members in their teams + themselves
+//          Member: teammates + their manager
+// @access  Private
+router.get('/', protect, async (req, res, next) => {
   try {
-    const users = await User.find().select('-__v').sort({ createdAt: -1 });
-    res.json(users);
+    if (req.user.role === 'admin') {
+      // Admin sees everyone
+      const users = await User.find().select('-__v').sort({ createdAt: -1 });
+      return res.json(users);
+    }
+
+    if (req.user.role === 'manager') {
+      // Manager sees members from their teams + themselves
+      const teams = await Team.find({ manager: req.user._id });
+      const memberIds = new Set();
+      memberIds.add(req.user._id.toString());
+      teams.forEach(team => {
+        team.members.forEach(m => memberIds.add(m.toString()));
+      });
+      const users = await User.find({ _id: { $in: Array.from(memberIds) } })
+        .select('-__v')
+        .sort({ createdAt: -1 });
+      return res.json(users);
+    }
+
+    // Member: sees teammates + their manager
+    const teams = await Team.find({ members: req.user._id }).populate('manager', 'name email avatar role');
+    const userIds = new Set();
+    userIds.add(req.user._id.toString());
+    teams.forEach(team => {
+      if (team.manager) userIds.add(team.manager._id.toString());
+      team.members.forEach(m => userIds.add(m.toString()));
+    });
+    const users = await User.find({ _id: { $in: Array.from(userIds) } })
+      .select('-__v')
+      .sort({ createdAt: -1 });
+    return res.json(users);
   } catch (error) {
     next(error);
   }
@@ -38,8 +72,8 @@ router.put('/:id/role', protect, authorize('admin'), async (req, res, next) => {
   try {
     const { role } = req.body;
 
-    if (!['admin', 'member'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role. Must be admin or member' });
+    if (!['admin', 'manager', 'member'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role. Must be admin, manager, or member' });
     }
 
     const user = await User.findById(req.params.id);

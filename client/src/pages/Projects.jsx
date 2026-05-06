@@ -110,7 +110,7 @@ const Projects = () => {
 
       {projects.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">📁</div>
+          <div className="empty-state-icon">—</div>
           <div className="empty-state-text">No projects found</div>
           <div className="empty-state-sub">{isAdmin ? 'Create your first project to get started.' : 'You have not been assigned to any projects yet.'}</div>
         </div>

@@ -6,6 +6,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('member');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const Register = () => {
       return;
     }
     setLoading(true);
-    const result = await register(name, email, password);
+    const result = await register(name, email, password, role);
     setLoading(false);
     if (result.success) navigate('/dashboard');
   };
@@ -26,7 +27,7 @@ const Register = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">⚡ Create Account</h1>
+        <h1 className="auth-title">Create Account</h1>
         <p className="auth-subtitle">Join TaskFlow Pro to manage your tasks</p>
 
         <form onSubmit={handleSubmit}>
@@ -70,6 +71,20 @@ const Register = () => {
               minLength={6}
               autoComplete="new-password"
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="register-role">Role</label>
+            <select
+              className="form-input form-select"
+              id="register-role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="member">Member</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
 
           <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center' }} id="register-submit">

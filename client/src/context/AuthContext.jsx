@@ -54,9 +54,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password) => {
+  const register = async (name, email, password, role) => {
     try {
-      const { data } = await API.post('/api/auth/register', { name, email, password });
+      const { data } = await API.post('/api/auth/register', { name, email, password, role });
       localStorage.setItem('taskflow_token', data.token);
       localStorage.setItem('taskflow_user', JSON.stringify(data.user));
       setUser(data.user);
@@ -77,9 +77,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const canManage = user?.role === 'admin' || user?.role === 'manager';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin, isManager, canManage }}>
       {children}
     </AuthContext.Provider>
   );

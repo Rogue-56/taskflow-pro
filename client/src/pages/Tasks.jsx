@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
 import TaskCard from '../components/TaskCard';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { MdAdd, MdSearch } from 'react-icons/md';
+import { MdAdd, MdSearch, MdPerson } from 'react-icons/md';
 
 const Tasks = () => {
-  const { isAdmin } = useAuth();
+  const { user, canManage } = useAuth();
+  const [myTasksOnly, setMyTasksOnly] = useState(false);
+  const [searchParams] = useSearchParams();
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
@@ -16,8 +19,13 @@ const Tasks = () => {
   const [showModal, setShowModal] = useState(false);
   const [editTask, setEditTask] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [filters, setFilters] = useState({ status: 'all', priority: 'all', project: '', search: '' });
-  const [form, setForm] = useState({ title: '', description: '', status: 'todo', priority: 'medium', dueDate: '', assignedTo: '', project: '' });
+  const [filters, setFilters] = useState({
+    status: searchParams.get('status') || 'all',
+    priority: searchParams.get('priority') || 'all',
+    project: searchParams.get('project') || '',
+    search: '',
+  });
+  const [form, setForm] = useState({ title: '', description: '', status: 'todo', priority: 'medium', dueDate: '', assignedTo: [], project: '' });
 
   useEffect(() => { fetchData(); }, [filters]);
 
@@ -36,7 +44,7 @@ const Tasks = () => {
       ]);
       setTasks(tasksRes.data);
       setProjects(projectsRes.data);
-      if (isAdmin) {
+      if (canManage) {
         const usersRes = await API.get('/api/users');
         setUsers(usersRes.data);
       }
@@ -49,7 +57,7 @@ const Tasks = () => {
 
   const openCreate = () => {
     setEditTask(null);
-    setForm({ title: '', description: '', status: 'todo', priority: 'medium', dueDate: '', assignedTo: '', project: projects[0]?._id || '' });
+    setForm({ title: '', description: '', status: 'todo', priority: 'medium', dueDate: '', assignedTo: [], project: projects[0]?._id || '' });
     setShowModal(true);
   };
 
@@ -61,7 +69,7 @@ const Tasks = () => {
       status: task.status,
       priority: task.priority,
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-      assignedTo: task.assignedTo?._id || '',
+      assignedTo: Array.isArray(task.assignedTo) ? task.assignedTo.map(u => u._id || u) : (task.assignedTo?._id ? [task.assignedTo._id] : []),
       project: task.project?._id || '',
     });
     setShowModal(true);
@@ -71,7 +79,7 @@ const Tasks = () => {
     e.preventDefault();
     try {
       setSaving(true);
-      const payload = { ...form, dueDate: form.dueDate || null, assignedTo: form.assignedTo || null };
+      const payload = { ...form, dueDate: form.dueDate || null, assignedTo: form.assignedTo.length > 0 ? form.assignedTo : [] };
       if (editTask) {
         await API.put(`/api/tasks/${editTask._id}`, payload);
         toast.success('Task updated');
@@ -99,7 +107,6 @@ const Tasks = () => {
   };
 
   const handleDelete = async (taskId) => {
-    if (!window.confirm('Delete this task?')) return;
     try {
       await API.delete(`/api/tasks/${taskId}`);
       toast.success('Task deleted');
@@ -111,18 +118,34 @@ const Tasks = () => {
 
   if (loading && tasks.length === 0) return <LoadingSpinner />;
 
+  // Filter for "My Tasks Only"
+  const displayedTasks = myTasksOnly
+    ? tasks.filter(t => {
+        const assignees = Array.isArray(t.assignedTo) ? t.assignedTo : [];
+        return assignees.some(a => (a._id || a) === user?._id);
+      })
+    : tasks;
+
   return (
     <div className="page-container">
       <div className="page-header">
         <div>
           <h1 className="page-title">Tasks</h1>
-          <p className="page-subtitle">{tasks.length} task{tasks.length !== 1 ? 's' : ''} found</p>
+          <p className="page-subtitle">{displayedTasks.length} task{displayedTasks.length !== 1 ? 's' : ''} found</p>
         </div>
-        {isAdmin && (
-          <button className="btn btn-primary" onClick={openCreate} id="create-task-global-btn">
-            <MdAdd /> New Task
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            className={`my-tasks-toggle ${myTasksOnly ? 'active' : ''}`}
+            onClick={() => setMyTasksOnly(!myTasksOnly)}
+          >
+            <MdPerson /> My Tasks
           </button>
-        )}
+          {canManage && (
+            <button className="btn btn-primary" onClick={openCreate} id="create-task-global-btn">
+              <MdAdd /> New Task
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="filters-bar" id="filters-bar">
@@ -141,6 +164,7 @@ const Tasks = () => {
           <option value="todo">To Do</option>
           <option value="in-progress">In Progress</option>
           <option value="done">Done</option>
+          <option value="overdue">Overdue</option>
         </select>
         <select className="filter-select" value={filters.priority} onChange={(e) => setFilters({ ...filters, priority: e.target.value })}>
           <option value="all">All Priority</option>
@@ -155,14 +179,14 @@ const Tasks = () => {
         </select>
       </div>
 
-      {tasks.length === 0 ? (
+      {displayedTasks.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">🔍</div>
-          <div className="empty-state-text">No tasks found</div>
-          <div className="empty-state-sub">Try adjusting your filters or create a new task.</div>
+          <div className="empty-state-icon">—</div>
+          <div className="empty-state-text">{myTasksOnly ? 'No tasks assigned to you' : 'No tasks found'}</div>
+          <div className="empty-state-sub">{myTasksOnly ? 'Toggle off "My Tasks" to see all tasks.' : 'Try adjusting your filters or create a new task.'}</div>
         </div>
       ) : (
-        tasks.map((task) => (
+        displayedTasks.map((task) => (
           <TaskCard key={task._id} task={task} onStatusChange={handleStatusChange} onEdit={openEdit} onDelete={handleDelete} />
         ))
       )}
@@ -180,7 +204,7 @@ const Tasks = () => {
           <div className="form-group">
             <label className="form-label">Project</label>
             <select className="form-input form-select" value={form.project} onChange={(e) => setForm({ ...form, project: e.target.value })} required>
-              <option value="">Select project</option>
+              <option value="" disabled>Select project</option>
               {projects.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}
             </select>
           </div>
@@ -210,10 +234,19 @@ const Tasks = () => {
             </div>
             <div className="form-group">
               <label className="form-label">Assign To</label>
-              <select className="form-input form-select" value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}>
-                <option value="">Unassigned</option>
+              <select
+                className="form-input form-select"
+                multiple
+                style={{ minHeight: '90px' }}
+                value={form.assignedTo}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions, opt => opt.value);
+                  setForm({ ...form, assignedTo: selected });
+                }}
+              >
                 {users.map((u) => <option key={u._id} value={u._id}>{u.name}</option>)}
               </select>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>Hold Ctrl/Cmd to select multiple</div>
             </div>
           </div>
           <div className="modal-actions">

@@ -1,235 +1,157 @@
-const mongoose = require('mongoose');
 require('dotenv').config();
-
+const mongoose = require('mongoose');
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 const User = require('./models/User');
 const Project = require('./models/Project');
 const Task = require('./models/Task');
+const Team = require('./models/Team');
 
-const connectDB = require('./config/db');
-
-const seedData = async () => {
+const connectDB = async () => {
   try {
-    await connectDB();
-    console.log('\n🌱 Starting database seed...\n');
-
-    // Clear existing data
-    await Task.deleteMany({});
-    await Project.deleteMany({});
-    await User.deleteMany({});
-    console.log('🗑️  Cleared existing data');
-
-    // Create users
-    const admin = await User.create({
-      name: 'Admin User',
-      email: 'admin@taskflow.com',
-      password: 'admin123',
-      role: 'admin',
-    });
-
-    const john = await User.create({
-      name: 'John Doe',
-      email: 'john@taskflow.com',
-      password: 'member123',
-      role: 'member',
-    });
-
-    const jane = await User.create({
-      name: 'Jane Smith',
-      email: 'jane@taskflow.com',
-      password: 'member123',
-      role: 'member',
-    });
-
-    console.log('👤 Created 3 users');
-
-    // Create projects
-    const webApp = await Project.create({
-      name: 'Website Redesign',
-      description: 'Complete overhaul of the company website with modern design and improved UX.',
-      status: 'active',
-      members: [admin._id, john._id, jane._id],
-      createdBy: admin._id,
-    });
-
-    const mobileApp = await Project.create({
-      name: 'Mobile App Development',
-      description: 'Build a cross-platform mobile application for customer engagement.',
-      status: 'active',
-      members: [admin._id, john._id],
-      createdBy: admin._id,
-    });
-
-    const marketing = await Project.create({
-      name: 'Q2 Marketing Campaign',
-      description: 'Plan and execute the marketing strategy for Q2 product launch.',
-      status: 'active',
-      members: [admin._id, jane._id],
-      createdBy: admin._id,
-    });
-
-    console.log('📁 Created 3 projects');
-
-    // Helper for dates
-    const daysFromNow = (days) => {
-      const date = new Date();
-      date.setDate(date.getDate() + days);
-      return date;
-    };
-
-    // Create tasks
-    const tasks = await Task.insertMany([
-      // Website Redesign tasks
-      {
-        title: 'Design homepage mockup',
-        description: 'Create a modern, responsive homepage design with hero section, features, and testimonials.',
-        status: 'done',
-        priority: 'high',
-        dueDate: daysFromNow(-5), // past — done, not overdue
-        assignedTo: jane._id,
-        project: webApp._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'Implement responsive navigation',
-        description: 'Build a mobile-first responsive navigation bar with hamburger menu and smooth transitions.',
-        status: 'in-progress',
-        priority: 'high',
-        dueDate: daysFromNow(3),
-        assignedTo: john._id,
-        project: webApp._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'Set up CI/CD pipeline',
-        description: 'Configure GitHub Actions for automated testing and deployment to staging.',
-        status: 'todo',
-        priority: 'medium',
-        dueDate: daysFromNow(7),
-        assignedTo: john._id,
-        project: webApp._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'Write API documentation',
-        description: 'Document all REST API endpoints with request/response examples using Swagger.',
-        status: 'todo',
-        priority: 'low',
-        dueDate: daysFromNow(-2), // overdue!
-        assignedTo: jane._id,
-        project: webApp._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'Optimize database queries',
-        description: 'Review and optimize slow MongoDB queries. Add proper indexes.',
-        status: 'in-progress',
-        priority: 'urgent',
-        dueDate: daysFromNow(-1), // overdue!
-        assignedTo: john._id,
-        project: webApp._id,
-        createdBy: admin._id,
-      },
-
-      // Mobile App tasks
-      {
-        title: 'Set up React Native project',
-        description: 'Initialize the React Native project with TypeScript, navigation, and state management.',
-        status: 'done',
-        priority: 'high',
-        dueDate: daysFromNow(-10),
-        assignedTo: john._id,
-        project: mobileApp._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'Build authentication screens',
-        description: 'Create login, register, and forgot password screens with form validation.',
-        status: 'in-progress',
-        priority: 'high',
-        dueDate: daysFromNow(5),
-        assignedTo: john._id,
-        project: mobileApp._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'Implement push notifications',
-        description: 'Set up Firebase Cloud Messaging for push notifications on iOS and Android.',
-        status: 'todo',
-        priority: 'medium',
-        dueDate: daysFromNow(14),
-        assignedTo: john._id,
-        project: mobileApp._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'App store submission prep',
-        description: 'Prepare screenshots, descriptions, and metadata for App Store and Play Store submission.',
-        status: 'todo',
-        priority: 'low',
-        dueDate: daysFromNow(-3), // overdue!
-        assignedTo: john._id,
-        project: mobileApp._id,
-        createdBy: admin._id,
-      },
-
-      // Marketing tasks
-      {
-        title: 'Create social media calendar',
-        description: 'Plan 30 days of social media content across Instagram, Twitter, and LinkedIn.',
-        status: 'in-progress',
-        priority: 'high',
-        dueDate: daysFromNow(2),
-        assignedTo: jane._id,
-        project: marketing._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'Design email newsletter template',
-        description: 'Create a reusable HTML email template for the weekly product newsletter.',
-        status: 'todo',
-        priority: 'medium',
-        dueDate: daysFromNow(10),
-        assignedTo: jane._id,
-        project: marketing._id,
-        createdBy: admin._id,
-      },
-      {
-        title: 'Competitor analysis report',
-        description: 'Research and compile a comprehensive analysis of top 5 competitors.',
-        status: 'todo',
-        priority: 'urgent',
-        dueDate: daysFromNow(-4), // overdue!
-        assignedTo: jane._id,
-        project: marketing._id,
-        createdBy: admin._id,
-      },
-    ]);
-
-    console.log(`✅ Created ${tasks.length} tasks`);
-
-    console.log('\n========================================');
-    console.log('  🎉 Database seeded successfully!');
-    console.log('========================================');
-    console.log('\n📧 Test Credentials:');
-    console.log('────────────────────────────────────────');
-    console.log('  Admin:');
-    console.log('    Email:    admin@taskflow.com');
-    console.log('    Password: admin123');
-    console.log('');
-    console.log('  Member 1:');
-    console.log('    Email:    john@taskflow.com');
-    console.log('    Password: member123');
-    console.log('');
-    console.log('  Member 2:');
-    console.log('    Email:    jane@taskflow.com');
-    console.log('    Password: member123');
-    console.log('────────────────────────────────────────\n');
-
-    process.exit(0);
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB connected for seeding');
   } catch (error) {
-    console.error('❌ Seed error:', error);
+    console.error('Connection error:', error.message);
     process.exit(1);
   }
 };
 
-seedData();
+const seed = async () => {
+  await connectDB();
+
+  // Clear existing data
+  await User.deleteMany({});
+  await Project.deleteMany({});
+  await Task.deleteMany({});
+  await Team.deleteMany({});
+  console.log('Cleared existing data');
+
+  // Create users (3 roles)
+  const admin = await User.create({
+    name: 'Admin User',
+    email: 'admin@taskflow.com',
+    password: 'admin123',
+    role: 'admin',
+  });
+
+  const manager1 = await User.create({
+    name: 'Sarah Manager',
+    email: 'sarah@taskflow.com',
+    password: 'manager123',
+    role: 'manager',
+  });
+
+  const manager2 = await User.create({
+    name: 'Mike Lead',
+    email: 'mike@taskflow.com',
+    password: 'manager123',
+    role: 'manager',
+  });
+
+  const member1 = await User.create({
+    name: 'John Doe',
+    email: 'john@taskflow.com',
+    password: 'member123',
+    role: 'member',
+  });
+
+  const member2 = await User.create({
+    name: 'Jane Smith',
+    email: 'jane@taskflow.com',
+    password: 'member123',
+    role: 'member',
+  });
+
+  const member3 = await User.create({
+    name: 'Alex Kumar',
+    email: 'alex@taskflow.com',
+    password: 'member123',
+    role: 'member',
+  });
+
+  const member4 = await User.create({
+    name: 'Priya Sharma',
+    email: 'priya@taskflow.com',
+    password: 'member123',
+    role: 'member',
+  });
+
+  console.log('Created users (1 admin, 2 managers, 4 members)');
+
+  // Create teams
+  const team1 = await Team.create({
+    name: 'Engineering',
+    description: 'Core product engineering team',
+    manager: manager1._id,
+    members: [member1._id, member2._id],
+    createdBy: admin._id,
+  });
+
+  const team2 = await Team.create({
+    name: 'Design',
+    description: 'UI/UX and product design team',
+    manager: manager2._id,
+    members: [member3._id, member4._id],
+    createdBy: admin._id,
+  });
+
+  console.log('Created 2 teams');
+
+  // Create projects
+  const project1 = await Project.create({
+    name: 'Mobile App Development',
+    description: 'Cross-platform mobile application using React Native',
+    status: 'active',
+    members: [admin._id, manager1._id, member1._id, member2._id],
+    createdBy: admin._id,
+  });
+
+  const project2 = await Project.create({
+    name: 'Website Redesign',
+    description: 'Complete overhaul of the company marketing website',
+    status: 'active',
+    members: [admin._id, manager2._id, member3._id, member4._id],
+    createdBy: admin._id,
+  });
+
+  const project3 = await Project.create({
+    name: 'API Integration',
+    description: 'Third-party payment and analytics API integration',
+    status: 'active',
+    members: [admin._id, manager1._id, member1._id],
+    createdBy: manager1._id,
+  });
+
+  console.log('Created 3 projects');
+
+  // Create tasks
+  const now = new Date();
+  const tasks = [
+    { title: 'Set up React Native project', description: 'Initialize project with Expo and configure navigation', status: 'done', priority: 'high', dueDate: new Date(now.getTime() + 2 * 86400000), assignedTo: [member1._id, member2._id], project: project1._id, createdBy: manager1._id },
+    { title: 'Design login screen', description: 'Create UI mockups for the authentication flow', status: 'in-progress', priority: 'medium', dueDate: new Date(now.getTime() + 5 * 86400000), assignedTo: [member2._id], project: project1._id, createdBy: manager1._id },
+    { title: 'Implement push notifications', description: 'Set up Firebase Cloud Messaging for push notifications on iOS and Android.', status: 'todo', priority: 'medium', dueDate: new Date(now.getTime() + 14 * 86400000), assignedTo: [member1._id], project: project1._id, createdBy: manager1._id },
+    { title: 'Homepage wireframe', description: 'Create wireframe for the new homepage layout', status: 'done', priority: 'high', dueDate: new Date(now.getTime() + 3 * 86400000), assignedTo: [member3._id, member4._id], project: project2._id, createdBy: manager2._id },
+    { title: 'Responsive CSS framework', description: 'Set up design system with CSS variables and responsive grid', status: 'in-progress', priority: 'medium', dueDate: new Date(now.getTime() + 7 * 86400000), assignedTo: [member4._id], project: project2._id, createdBy: manager2._id },
+    { title: 'SEO audit', description: 'Run full SEO audit on current site and document improvements', status: 'todo', priority: 'low', dueDate: new Date(now.getTime() + 10 * 86400000), assignedTo: [member3._id], project: project2._id, createdBy: manager2._id },
+    { title: 'Payment gateway integration', description: 'Integrate Stripe for subscription billing', status: 'todo', priority: 'urgent', dueDate: new Date(now.getTime() - 2 * 86400000), assignedTo: [member1._id, member2._id], project: project3._id, createdBy: manager1._id },
+    { title: 'Analytics dashboard API', description: 'Connect Google Analytics and Mixpanel data endpoints', status: 'in-progress', priority: 'high', dueDate: new Date(now.getTime() + 6 * 86400000), assignedTo: [member1._id], project: project3._id, createdBy: admin._id },
+  ];
+
+  await Task.insertMany(tasks);
+  console.log(`Created ${tasks.length} tasks`);
+
+  console.log('\n--- Seed Complete ---');
+  console.log('Accounts:');
+  console.log('  Admin:    admin@taskflow.com / admin123');
+  console.log('  Manager:  sarah@taskflow.com / manager123');
+  console.log('  Manager:  mike@taskflow.com  / manager123');
+  console.log('  Member:   john@taskflow.com  / member123');
+  console.log('  Member:   jane@taskflow.com  / member123');
+  console.log('  Member:   alex@taskflow.com  / member123');
+  console.log('  Member:   priya@taskflow.com / member123');
+
+  process.exit(0);
+};
+
+seed();
