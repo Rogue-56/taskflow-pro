@@ -1,70 +1,245 @@
-# ⚡ TaskFlow Pro
+# TaskFlow Pro — Full-Stack Team Task Manager
 
-> A modern, full-stack task management application with role-based access control, real-time overdue detection, interactive calendar, and a stunning dark glassmorphism UI.
+A modern, full-stack task management web application with role-based access control (Admin/Manager/Member), project and team management, task assignment and tracking, an interactive dashboard with analytics, and a calendar view — built with React, Node.js, Express, and MongoDB.
 
-🔗 **Live Demo**: [https://taskflow-pro-production.up.railway.app](https://taskflow-pro-production.up.railway.app)
+**Live URL:** [https://taskflow-pro-production-0ad8.up.railway.app](https://taskflow-pro-production-0ad8.up.railway.app)
 
----
-
-## ✨ Features
-
-### Core
-- 🔐 **JWT Authentication** — Secure login/register with token persistence
-- 👤 **Role-Based Access** — Admin, Manager & Member roles with scoped permissions
-- 📁 **Project Management** — Create, edit, delete projects with member assignment
-- ✅ **Task CRUD** — Full task lifecycle with status, priority, due dates, and multi-user assignment
-- ⏰ **Overdue Detection** — Backend + frontend red glow highlighting for overdue tasks
-
-### Dashboard & Analytics
-- 📊 **Dashboard Stats** — At-a-glance cards for total, in-progress, completed, overdue, to-do, and urgent tasks
-- 📈 **Waterfall Chart** — Interactive task breakdown by status or by project with animated bars
-- 💡 **Rich Hover Tooltips** — Hover on any chart bar to see task details (title, priority, status, assignee, due date, project)
-- 👥 **Team / My Tasks Toggle** — Switch between team-wide and personal task views on the dashboard
-
-### Calendar
-- 📅 **Calendar Page** — Full monthly calendar with project timeline and task schedule views
-- 🔀 **Projects / Tasks Mode** — Toggle between project timelines (color-coded bars) and task due dates (status chips)
-- 🗓️ **Month Navigation** — Navigate months with today marker and jump-to-today button
-- 📋 **Summary Cards** — Project duration, completion progress, and weekly task counts below the calendar
-
-### Team & Management
-- 👥 **Team Management** — Create teams with managers and members
-- 🔄 **Role Switching** — Admin can toggle user roles
-- 🗑️ **Task History** — Archived deleted tasks with deletion audit trail
-- 🔍 **Search & Filter** — Filter tasks by status, priority, project; full-text search
-
-### UI/UX
-- 🎨 **Dark Glassmorphism UI** — Premium design with gradients, blur, and micro-animations
-- 🌗 **Light/Dark Theme** — Toggle between themes
-- 📱 **Fully Responsive** — Mobile-first design with collapsible navbar
-- 🔔 **Update Indicators** — Green dots on nav tabs when new content is available
-- 🚀 **One-Click Deploy** — Railway-ready with `railway.toml`
+**GitHub Repo:** [https://github.com/Rogue-56/taskflow-pro](https://github.com/Rogue-56/taskflow-pro)
 
 ---
 
-## 🛠️ Tech Stack
+## Table of Contents
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React 18, Vite, React Router v6 |
-| **Styling** | Vanilla CSS (dark glassmorphism design system) |
-| **HTTP Client** | Axios (JWT interceptors) |
-| **Notifications** | react-hot-toast |
-| **Icons** | react-icons (Material Design) |
-| **Backend** | Node.js, Express |
-| **Database** | MongoDB + Mongoose |
-| **Auth** | JWT + bcryptjs |
-| **Deployment** | Railway (monorepo) |
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [API Endpoints](#api-endpoints)
+- [Database Schema](#database-schema)
+- [Local Setup](#local-setup)
+- [Deployment](#deployment)
+- [Test Credentials](#test-credentials)
+- [Screenshots](#screenshots)
+- [Demo Video](#demo-video)
+- [Author](#author)
 
 ---
 
-## 🚀 Local Setup
+## Features
+
+### Authentication
+- Secure signup and login with JWT token-based authentication
+- Password hashing using bcrypt
+- Persistent sessions with token storage
+- Auto-redirect and 401 handling via Axios interceptors
+
+### Role-Based Access Control
+- **Admin** — Full access: create/edit/delete projects, tasks, teams, and manage users
+- **Manager** — Can create/edit projects and tasks, manage team assignments
+- **Member** — Can view assigned tasks, update task status, and see team-wide data
+
+### Project and Team Management
+- Create, edit, and delete projects with member assignment
+- Team creation with designated managers and team members
+- Scoped visibility: members see their team's data, admins see everything
+
+### Task Creation, Assignment, and Status Tracking
+- Full CRUD operations for tasks with title, description, status, priority, and due date
+- Multi-user task assignment
+- Status tracking: To Do, In Progress, Done
+- Priority levels: Low, Medium, High, Urgent
+- Real-time overdue detection with visual indicators
+- Task history and audit trail for deleted tasks
+
+### Dashboard (Tasks, Status, Overdue)
+- Summary statistics: total tasks, in-progress, completed, overdue, to-do, urgent
+- Interactive waterfall chart with two view modes (By Status / By Project)
+- Rich hover tooltips showing task details (title, assignee, priority, due date, project)
+- Team / My Tasks toggle for switching between team-wide and personal views
+- Recent tasks list with inline status updates
+
+### Calendar View
+- Full monthly calendar with project timeline and task schedule views
+- Toggle between Projects mode (color-coded timeline bars) and Tasks mode (status-colored chips)
+- Month navigation with today marker
+- Summary cards showing project duration, completion progress, and upcoming deadlines
+
+### Additional Features
+- Light and dark theme toggle
+- Fully responsive design (mobile, tablet, desktop)
+- Search, filter, and sort across tasks
+- Update notification indicators on navigation tabs
+
+---
+
+## Tech Stack
+
+| Layer        | Technology                              |
+|--------------|----------------------------------------|
+| Frontend     | React 18, Vite, React Router v6        |
+| Styling      | Vanilla CSS (custom design system)      |
+| HTTP Client  | Axios with JWT interceptors             |
+| Notifications| react-hot-toast                         |
+| Icons        | react-icons (Material Design)           |
+| Backend      | Node.js, Express                        |
+| Database     | MongoDB with Mongoose ODM               |
+| Authentication| JSON Web Tokens (JWT) + bcryptjs       |
+| Deployment   | Railway (monorepo setup)                |
+
+---
+
+## Architecture
+
+```
+taskflow-pro/
+├── client/                    # React frontend (Vite)
+│   ├── src/
+│   │   ├── api/               # Axios instance with interceptors
+│   │   ├── components/        # Reusable UI components
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── WaterfallChart.jsx
+│   │   │   ├── StatsCard.jsx
+│   │   │   ├── TaskCard.jsx
+│   │   │   ├── Modal.jsx
+│   │   │   └── ...
+│   │   ├── context/           # Auth and Theme context providers
+│   │   ├── pages/             # Route-level page components
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Projects.jsx
+│   │   │   ├── Tasks.jsx
+│   │   │   ├── Calendar.jsx
+│   │   │   ├── Team.jsx
+│   │   │   └── ...
+│   │   ├── index.css          # Design system and all styles
+│   │   └── main.jsx           # App entry point
+│   └── index.html
+├── server/                    # Express backend
+│   ├── config/                # Database connection
+│   ├── middleware/            # Auth and error handling middleware
+│   ├── models/                # Mongoose schemas
+│   │   ├── User.js
+│   │   ├── Project.js
+│   │   ├── Task.js
+│   │   ├── Team.js
+│   │   └── DeletedTask.js
+│   ├── routes/                # REST API route handlers
+│   │   ├── auth.js
+│   │   ├── tasks.js
+│   │   ├── projects.js
+│   │   ├── teams.js
+│   │   └── users.js
+│   ├── seed.js                # Database seeder
+│   └── index.js               # Server entry point
+├── railway.toml               # Railway deployment config
+├── package.json               # Root scripts
+└── README.md
+```
+
+---
+
+## API Endpoints
+
+### Authentication
+
+| Method | Path                | Auth | Description               |
+|--------|---------------------|:----:|---------------------------|
+| POST   | /api/auth/register  | No   | Register a new user       |
+| POST   | /api/auth/login     | No   | Login and receive JWT      |
+| GET    | /api/auth/me        | Yes  | Get current user profile   |
+
+### Users
+
+| Method | Path                  | Auth | Role          | Description         |
+|--------|----------------------|:----:|---------------|---------------------|
+| GET    | /api/users           | Yes  | Admin/Manager | List all users      |
+| GET    | /api/users/:id       | Yes  | Any           | Get user by ID      |
+| PUT    | /api/users/:id/role  | Yes  | Admin         | Update user role    |
+| DELETE | /api/users/:id       | Yes  | Admin         | Delete user         |
+
+### Projects
+
+| Method | Path                | Auth | Role          | Description              |
+|--------|---------------------|:----:|---------------|--------------------------|
+| GET    | /api/projects       | Yes  | Any           | List projects (scoped)   |
+| POST   | /api/projects       | Yes  | Admin/Manager | Create project           |
+| GET    | /api/projects/:id   | Yes  | Any           | Get project with tasks   |
+| PUT    | /api/projects/:id   | Yes  | Admin/Manager | Update project           |
+| DELETE | /api/projects/:id   | Yes  | Admin/Manager | Delete project and tasks |
+
+### Tasks
+
+| Method | Path                      | Auth | Role          | Description                          |
+|--------|--------------------------|:----:|---------------|--------------------------------------|
+| GET    | /api/tasks               | Yes  | Any           | List tasks (supports ?mine=true)     |
+| GET    | /api/tasks/stats         | Yes  | Any           | Dashboard statistics                 |
+| GET    | /api/tasks/stats/projects| Yes  | Any           | Per-project task breakdown           |
+| POST   | /api/tasks               | Yes  | Admin/Manager | Create task                          |
+| GET    | /api/tasks/:id           | Yes  | Any           | Get single task                      |
+| PUT    | /api/tasks/:id           | Yes  | Any           | Update task (members: status only)   |
+| DELETE | /api/tasks/:id           | Yes  | Admin/Manager | Delete task (archived to history)    |
+| GET    | /api/tasks/history       | Yes  | Admin/Manager | Deleted tasks audit log              |
+
+### Teams
+
+| Method | Path             | Auth | Role  | Description  |
+|--------|-----------------|:----:|-------|--------------|
+| GET    | /api/teams      | Yes  | Any   | List teams   |
+| POST   | /api/teams      | Yes  | Admin | Create team  |
+| PUT    | /api/teams/:id  | Yes  | Admin | Update team  |
+| DELETE | /api/teams/:id  | Yes  | Admin | Delete team  |
+
+---
+
+## Database Schema
+
+### User
+| Field    | Type   | Details                                  |
+|----------|--------|------------------------------------------|
+| name     | String | Required, max 50 characters              |
+| email    | String | Required, unique                         |
+| password | String | Hashed with bcrypt, min 6 characters     |
+| role     | String | Enum: admin, manager, member (default)   |
+| avatar   | String | Auto-generated color code                |
+
+### Project
+| Field       | Type       | Details                                |
+|-------------|------------|----------------------------------------|
+| name        | String     | Required, max 100 characters           |
+| description | String     | Optional, max 500 characters           |
+| status      | String     | Enum: active, completed, archived      |
+| members     | [ObjectId] | References User                        |
+| createdBy   | ObjectId   | References User                        |
+
+### Task
+| Field       | Type       | Details                                |
+|-------------|------------|----------------------------------------|
+| title       | String     | Required, max 200 characters           |
+| description | String     | Optional, max 1000 characters          |
+| status      | String     | Enum: todo, in-progress, done          |
+| priority    | String     | Enum: low, medium, high, urgent        |
+| dueDate     | Date       | Used for overdue detection             |
+| assignedTo  | [ObjectId] | References User (multi-assign)         |
+| project     | ObjectId   | References Project (required)          |
+| createdBy   | ObjectId   | References User                        |
+| isOverdue   | Virtual    | true if past due and status != done    |
+
+### Team
+| Field       | Type       | Details                                |
+|-------------|------------|----------------------------------------|
+| name        | String     | Required                               |
+| description | String     | Optional                               |
+| manager     | ObjectId   | References User                        |
+| members     | [ObjectId] | References User                        |
+| createdBy   | ObjectId   | References User                        |
+
+---
+
+## Local Setup
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB Atlas account (or local MongoDB)
+- Node.js 18 or higher
+- MongoDB Atlas account (or local MongoDB instance)
 
-### 1. Clone and install
+### 1. Clone and install dependencies
 
 ```bash
 git clone https://github.com/Rogue-56/taskflow-pro.git
@@ -72,13 +247,13 @@ cd taskflow-pro
 npm run install
 ```
 
-### 2. Configure environment
+### 2. Configure environment variables
 
 Create `server/.env`:
 
-```env
+```
 MONGODB_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/taskflow
-JWT_SECRET=your-super-secret-jwt-key-change-this
+JWT_SECRET=your-secret-key
 PORT=5000
 NODE_ENV=development
 ```
@@ -91,189 +266,115 @@ npm run seed
 
 ### 4. Start development servers
 
-Terminal 1 — Backend:
+Backend (Terminal 1):
 ```bash
 npm run dev:server
 ```
 
-Terminal 2 — Frontend:
+Frontend (Terminal 2):
 ```bash
 npm run dev:client
 ```
 
-Frontend runs on `http://localhost:3000`, API on `http://localhost:5000`.
+The frontend runs on http://localhost:3000 and the API on http://localhost:5000.
 
 ---
 
-## 🔑 Environment Variables
+## Deployment
 
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `MONGODB_URI` | ✅ | MongoDB connection string | `mongodb+srv://...` |
-| `JWT_SECRET` | ✅ | Secret for JWT signing | `my-secret-key` |
-| `PORT` | ❌ | Server port (default: 5000) | `5000` |
-| `NODE_ENV` | ❌ | Environment mode | `production` |
-| `VITE_API_URL` | ❌ | API URL for frontend (empty in prod) | `` |
+This application is deployed on **Railway** using a monorepo setup.
 
----
+**Live URL:** [https://taskflow-pro-production-0ad8.up.railway.app](https://taskflow-pro-production-0ad8.up.railway.app)
 
-## 📡 API Endpoints
+### Deployment Steps
 
-### Authentication
-| Method | Path | Protected | Description |
-|--------|------|:---------:|-------------|
-| `POST` | `/api/auth/register` | ❌ | Register new user |
-| `POST` | `/api/auth/login` | ❌ | Login, returns JWT |
-| `GET` | `/api/auth/me` | ✅ | Get current user profile |
+1. Push code to GitHub
+2. Create a new project on [Railway](https://railway.app) and connect the GitHub repository
+3. Set environment variables in the Railway dashboard:
+   - `MONGODB_URI` — MongoDB Atlas connection string
+   - `JWT_SECRET` — Secret key for JWT signing
+   - `NODE_ENV` — Set to `production`
+4. Railway auto-detects the `railway.toml` configuration and deploys
+5. Generate a public domain under Settings > Networking
+6. Seed the database via the Railway shell: `cd server && node seed.js`
 
-### Users
-| Method | Path | Protected | Role | Description |
-|--------|------|:---------:|------|-------------|
-| `GET` | `/api/users` | ✅ | Admin/Manager | List all users |
-| `GET` | `/api/users/:id` | ✅ | Any | Get user by ID |
-| `PUT` | `/api/users/:id/role` | ✅ | Admin | Update user role |
-| `DELETE` | `/api/users/:id` | ✅ | Admin | Delete user |
+### Railway Configuration (railway.toml)
 
-### Projects
-| Method | Path | Protected | Role | Description |
-|--------|------|:---------:|------|-------------|
-| `GET` | `/api/projects` | ✅ | Any | List projects (scoped) |
-| `POST` | `/api/projects` | ✅ | Admin/Manager | Create project |
-| `GET` | `/api/projects/:id` | ✅ | Any | Get project + tasks |
-| `PUT` | `/api/projects/:id` | ✅ | Admin/Manager | Update project |
-| `DELETE` | `/api/projects/:id` | ✅ | Admin/Manager | Delete project + tasks |
+```toml
+[build]
+builder = "NIXPACKS"
 
-### Tasks
-| Method | Path | Protected | Role | Description |
-|--------|------|:---------:|------|-------------|
-| `GET` | `/api/tasks` | ✅ | Any | List tasks (scoped, `?mine=true` for personal) |
-| `GET` | `/api/tasks/stats` | ✅ | Any | Dashboard statistics |
-| `GET` | `/api/tasks/stats/projects` | ✅ | Any | Per-project task breakdown |
-| `POST` | `/api/tasks` | ✅ | Admin/Manager | Create task |
-| `GET` | `/api/tasks/:id` | ✅ | Any | Get single task |
-| `PUT` | `/api/tasks/:id` | ✅ | Any | Update task (member=status only) |
-| `DELETE` | `/api/tasks/:id` | ✅ | Admin/Manager | Delete task (archived to history) |
-| `GET` | `/api/tasks/history` | ✅ | Admin/Manager | Deleted tasks audit log |
+[build.nixpacks]
+buildCmd = "npm run install && npm run build"
 
-### Teams
-| Method | Path | Protected | Role | Description |
-|--------|------|:---------:|------|-------------|
-| `GET` | `/api/teams` | ✅ | Any | List teams |
-| `POST` | `/api/teams` | ✅ | Admin | Create team |
-| `PUT` | `/api/teams/:id` | ✅ | Admin | Update team |
-| `DELETE` | `/api/teams/:id` | ✅ | Admin | Delete team |
-
----
-
-## 🗄️ Database Schema
-
-### User
-```
-name       String    Required, max 50 chars
-email      String    Unique, required
-password   String    Hashed (bcrypt), min 6 chars
-role       String    'admin' | 'manager' | 'member' (default)
-avatar     String    Auto-generated color
-```
-
-### Project
-```
-name        String      Required, max 100 chars
-description String      Optional, max 500 chars
-status      String      'active' | 'completed' | 'archived'
-members     [ObjectId]  References User
-createdBy   ObjectId    References User
-```
-
-### Task
-```
-title       String      Required, max 200 chars
-description String      Optional, max 1000 chars
-status      String      'todo' | 'in-progress' | 'done'
-priority    String      'low' | 'medium' | 'high' | 'urgent'
-dueDate     Date        For overdue detection
-assignedTo  [ObjectId]  References User (multi-assign)
-project     ObjectId    References Project (required)
-createdBy   ObjectId    References User
-isOverdue   Virtual     true if past due & not done
-```
-
-### Team
-```
-name        String      Required
-description String      Optional
-manager     ObjectId    References User
-members     [ObjectId]  References User
-createdBy   ObjectId    References User
+[deploy]
+startCommand = "npm start"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
 ```
 
 ---
 
-## 🚂 Railway Deployment
+## Test Credentials
 
-1. Push your code to GitHub
-2. Go to [railway.app](https://railway.app) and sign in with GitHub
-3. Click **"New Project"** → **"Deploy from GitHub Repo"**
-4. Select your `taskflow-pro` repository
-5. Set these **environment variables** in the Railway dashboard:
-   - `MONGODB_URI` — your MongoDB Atlas connection string
-   - `JWT_SECRET` — any strong random string
-   - `NODE_ENV` — `production`
-6. Railway auto-detects `railway.toml` and deploys
-7. After deploy, open the Railway shell and run: `cd server && node seed.js`
-8. Click **"Generate Domain"** to get your live URL
+After running the seed script:
 
----
+| Role    | Email               | Password    |
+|---------|---------------------|-------------|
+| Admin   | admin@taskflow.com  | admin123    |
+| Manager | sarah@taskflow.com  | manager123  |
+| Manager | mike@taskflow.com   | manager123  |
+| Member  | john@taskflow.com   | member123   |
+| Member  | jane@taskflow.com   | member123   |
+| Member  | alex@taskflow.com   | member123   |
+| Member  | priya@taskflow.com  | member123   |
 
-## 🧪 Test Credentials
-
-After running `npm run seed`:
-
-| Role | Email | Password |
-|------|-------|----------|
-| **Admin** | `admin@taskflow.com` | `admin123` |
-| **Manager** | `sarah@taskflow.com` | `manager123` |
-| **Manager** | `mike@taskflow.com` | `manager123` |
-| **Member** | `john@taskflow.com` | `member123` |
-| **Member** | `jane@taskflow.com` | `member123` |
-| **Member** | `alex@taskflow.com` | `member123` |
-| **Member** | `priya@taskflow.com` | `member123` |
-
-Seed data includes 3 projects, 2 teams, 7 users, and 8+ tasks with varied statuses/priorities/due dates.
+The seed data includes 3 projects, 2 teams, 7 users, and 8+ tasks with varied statuses, priorities, and due dates.
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 ### Dashboard
-- Stats cards with task overview
+- Summary statistics with task counts across all statuses
 - Interactive waterfall chart with hover tooltips
-- Team/Personal toggle for scoped views
+- Team/Personal toggle for scoped data views
 
 ### Calendar
-- Monthly project timeline view
-- Task schedule with status-colored chips
-- Summary cards with progress tracking
+- Monthly calendar with project timeline view
+- Task schedule view with status-colored indicators
+- Project summary cards with progress tracking
 
 ### Task Management
-- Full CRUD with inline status updates
+- Full CRUD interface with inline status updates
 - Priority badges and overdue highlighting
-- Search, filter, and sort capabilities
+- Filtering by status, priority, and project
 
 ---
 
-## 🎥 Demo Video
+## Demo Video
 
-> [Add your 2-5 min demo video link here]
-
----
-
-## 👤 Author
-
-Built by **Rogue-56**
+[Add demo video link here]
 
 ---
 
-## 📄 License
+## Environment Variables
+
+| Variable    | Required | Description                        |
+|-------------|----------|------------------------------------|
+| MONGODB_URI | Yes      | MongoDB connection string          |
+| JWT_SECRET  | Yes      | Secret for JWT token signing       |
+| PORT        | No       | Server port (default: 5000)        |
+| NODE_ENV    | No       | Environment mode (production/dev)  |
+
+---
+
+## Author
+
+**Abhinav Dhiman** — [GitHub: Rogue-56](https://github.com/Rogue-56)
+
+---
+
+## License
 
 MIT
